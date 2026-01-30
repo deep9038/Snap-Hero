@@ -1,0 +1,35 @@
+{
+  "manifest_version": 3,
+  "name": "Snap Hero",
+  "version": "1.2.0",
+  "description": "Capture and edit screenshots with one click",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage",
+    "tabs",
+    "clipboardWrite"
+  ],
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "Snap Hero",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png"
+    }
+  },
+  "background": {
+    "service_worker": "scripts/background.js"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["scripts/full-page.js", "editor/*"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
