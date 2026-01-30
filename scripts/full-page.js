@@ -221,6 +221,11 @@
     });
   }
 
+
+
+
+  
+
   function requestCapture() {
     return new Promise((resolve, reject) => {
       chrome.runtime.sendMessage({ action: 'captureSegment' }, response => {
