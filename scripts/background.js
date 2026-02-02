@@ -102,6 +102,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     } else if (message.mode === 'fullPage') {
       console.log('[Background] Mode: fullPage');
       captureFullPage(message.tabId, sendResponse);
+    } else if (message.mode === 'areaSelect') {
+      console.log('[Background] Mode: areaSelect');
+      captureAreaSelect(message.tabId, sendResponse);
     } else {
       sendResponse(createErrorResponse(CaptureError.UNKNOWN, { message: 'Unknown capture mode: ' + message.mode }));
     }
@@ -131,6 +134,19 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   // Full page capture error
   if (message.action === 'fullPageError') {
     console.error('[Background] Full page capture error:', message.error);
+    return false;
+  }
+
+  // Area select complete - crop and open editor
+  if (message.action === 'areaSelectComplete') {
+    console.log('[Background] Area select complete, rect:', message.rect);
+    cropAndOpenEditor(sender.tab.windowId, message.rect, message.devicePixelRatio);
+    return false;
+  }
+
+  // Area select cancelled
+  if (message.action === 'areaSelectCancelled') {
+    console.log('[Background] Area select cancelled');
     return false;
   }
 });
@@ -249,6 +265,101 @@ function captureSegment(windowId, sendResponse) {
     console.error('[Background] Segment capture error:', error);
     const errorType = classifyError(error);
     sendResponse(createErrorResponse(errorType, error));
+  }
+}
+
+async function captureAreaSelect(tabId, sendResponse) {
+  console.log('[Background] Starting area select capture for tab:', tabId);
+
+  try {
+    const tab = await chrome.tabs.get(tabId);
+
+    if (isProtectedUrl(tab.url)) {
+      console.error('[Background] Protected URL:', tab.url);
+      sendResponse(createErrorResponse(CaptureError.PROTECTED_PAGE));
+      return;
+    }
+
+    await chrome.scripting.executeScript({
+      target: { tabId: tabId },
+      files: ['scripts/area-select.js']
+    });
+
+    console.log('[Background] Area select script injected successfully');
+    sendResponse({ success: true });
+  } catch (error) {
+    console.error('[Background] Failed to inject area select script:', error);
+    const errorType = classifyError(error, { action: 'inject', isProtectedUrl: true });
+    sendResponse(createErrorResponse(errorType, error));
+  }
+}
+
+async function cropAndOpenEditor(windowId, rect, dpr) {
+  console.log('[Background] Cropping screenshot, DPR:', dpr, 'rect:', rect);
+
+  try {
+    const dataUrl = await new Promise((resolve, reject) => {
+      chrome.tabs.captureVisibleTab(windowId, { format: 'png' }, (result) => {
+        if (chrome.runtime.lastError) {
+          reject(new Error(chrome.runtime.lastError.message));
+          return;
+        }
+        if (!result) {
+          reject(new Error('Screenshot capture returned empty'));
+          return;
+        }
+        resolve(result);
+      });
+    });
+
+    console.log('[Background] Screenshot captured for cropping, length:', dataUrl.length);
+
+    // Convert dataUrl to ImageBitmap via fetch + blob
+    const response = await fetch(dataUrl);
+    const blob = await response.blob();
+    const imageBitmap = await createImageBitmap(blob);
+
+    console.log('[Background] Image dimensions:', imageBitmap.width, 'x', imageBitmap.height);
+
+    // Calculate crop coordinates (CSS pixels → device pixels)
+    const cropX = Math.round(rect.x * dpr);
+    const cropY = Math.round(rect.y * dpr);
+    const cropW = Math.round(rect.width * dpr);
+    const cropH = Math.round(rect.height * dpr);
+
+    // Clamp to image bounds
+    const clampedX = Math.max(0, Math.min(cropX, imageBitmap.width - 1));
+    const clampedY = Math.max(0, Math.min(cropY, imageBitmap.height - 1));
+    const clampedW = Math.min(cropW, imageBitmap.width - clampedX);
+    const clampedH = Math.min(cropH, imageBitmap.height - clampedY);
+
+    console.log('[Background] Crop rect (device px):', clampedX, clampedY, clampedW, clampedH);
+
+    // Use OffscreenCanvas to crop
+    const canvas = new OffscreenCanvas(clampedW, clampedH);
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(imageBitmap, clampedX, clampedY, clampedW, clampedH, 0, 0, clampedW, clampedH);
+
+    // Convert back to dataUrl
+    const croppedBlob = await canvas.convertToBlob({ type: 'image/png' });
+    const arrayBuffer = await croppedBlob.arrayBuffer();
+    const bytes = new Uint8Array(arrayBuffer);
+    let binaryString = '';
+    const chunkSize = 8192;
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+      binaryString += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
+    }
+    const croppedDataUrl = 'data:image/png;base64,' + btoa(binaryString);
+
+    console.log('[Background] Cropped image length:', croppedDataUrl.length);
+
+    // Open in editor
+    const result = await openEditor(croppedDataUrl);
+    if (!result.success) {
+      console.error('[Background] Failed to open editor after crop:', result.error);
+    }
+  } catch (error) {
+    console.error('[Background] Crop and open editor failed:', error);
   }
 }
 

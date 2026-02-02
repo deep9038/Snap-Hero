@@ -1,5 +1,6 @@
 const captureVisibleBtn = document.getElementById('captureVisibleBtn');
 const captureFullPageBtn = document.getElementById('captureFullPageBtn');
+const captureAreaBtn = document.getElementById('captureAreaBtn');
 
 // Error type constants (must match background.js)
 const CaptureErrorType = {
@@ -172,6 +173,60 @@ captureFullPageBtn.addEventListener('click', async () => {
   }
 });
 
+// Capture Area Select button handler
+captureAreaBtn.addEventListener('click', async () => {
+  console.log('[Popup] Capture Area Select clicked');
+  clearMessages();
+  setButtonLoading(captureAreaBtn, true);
+
+  try {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+
+    if (!tab) {
+      showError(getUserMessage({ message: 'No active tab' }));
+      setButtonLoading(captureAreaBtn, false);
+      return;
+    }
+
+    console.log('[Popup] Active tab:', tab.id, tab.url);
+
+    // Check for protected pages
+    if (tab.url.startsWith('chrome://') || tab.url.startsWith('chrome-extension://') || tab.url.startsWith('about:')) {
+      showError(getUserMessage({ message: tab.url }));
+      setButtonLoading(captureAreaBtn, false);
+      return;
+    }
+
+    console.log('[Popup] Starting area select capture for tab:', tab.id);
+
+    const response = await chrome.runtime.sendMessage({
+      action: 'capture',
+      mode: 'areaSelect',
+      tabId: tab.id
+    });
+
+    console.log('[Popup] Response:', response);
+
+    if (!response) {
+      setTimeout(() => window.close(), 500);
+      return;
+    }
+
+    if (response.error) {
+      console.error('[Popup] Area select error:', response.errorType, response.error);
+      showError(getUserMessage(response), response.errorType);
+      setButtonLoading(captureAreaBtn, false);
+    } else if (response.success) {
+      console.log('[Popup] Area select script injected');
+      window.close();
+    }
+  } catch (error) {
+    console.error('[Popup] Failed:', error);
+    showError(getUserMessage(error), error.errorType);
+    setButtonLoading(captureAreaBtn, false);
+  }
+});
+
 function timeout(ms, message) {
   return new Promise((_, reject) => {
     setTimeout(() => reject(new Error(message)), ms);
@@ -187,10 +242,12 @@ function setButtonLoading(button, isLoading) {
     button.classList.add('loading');
     captureVisibleBtn.disabled = true;
     captureFullPageBtn.disabled = true;
+    captureAreaBtn.disabled = true;
   } else {
     button.classList.remove('loading');
     captureVisibleBtn.disabled = false;
     captureFullPageBtn.disabled = false;
+    captureAreaBtn.disabled = false;
   }
 }
 

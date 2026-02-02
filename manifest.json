@@ -28,7 +28,7 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["scripts/full-page.js", "editor/*"],
+      "resources": ["scripts/full-page.js", "scripts/area-select.js", "editor/*"],
       "matches": ["<all_urls>"]
     }
   ]

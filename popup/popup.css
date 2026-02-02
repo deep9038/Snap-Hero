@@ -237,6 +237,12 @@ body {
   box-shadow: 0 4px 15px rgba(245, 87, 108, 0.4);
 }
 
+.capture-card.tertiary .card-icon {
+  background: var(--accent-gradient);
+  color: white;
+  box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4);
+}
+
 .card-icon svg {
   width: 24px;
   height: 24px;
