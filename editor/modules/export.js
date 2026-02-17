@@ -11,8 +11,6 @@ function getTimestamp() {
 
 // Download with format options
 export function downloadAsFormat(format = 'png', quality = 0.9) {
-  console.log('[Editor] Downloading as', format, 'quality:', quality);
-
   const mimeType = format === 'jpeg' ? 'image/jpeg' : 'image/png';
   const extension = format === 'jpeg' ? 'jpg' : 'png';
 
@@ -31,8 +29,6 @@ export function downloadImage() {
 
 // Copy canvas to clipboard
 export async function copyToClipboard() {
-  console.log('[Editor] Copying to clipboard...');
-
   try {
     const blob = await new Promise(resolve => {
       state.canvas.toBlob(resolve, 'image/png');
@@ -44,7 +40,6 @@ export async function copyToClipboard() {
 
     showSuccess('Copied to clipboard!');
   } catch (error) {
-    console.error('[Editor] Copy failed:', error);
     showError('Failed to copy: ' + error.message);
   }
 }

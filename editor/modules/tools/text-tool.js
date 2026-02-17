@@ -64,8 +64,6 @@ export function showTextInput(coords) {
 
   // Focus input
   setTimeout(() => input.focus(), TIMEOUTS.textInputFocus);
-
-  console.log('[Editor] Text input shown at:', coords.x.toFixed(0), coords.y.toFixed(0));
 }
 
 // Confirm and add text annotation
@@ -83,7 +81,6 @@ export function confirmTextInput() {
       state.pendingText.color
     );
     state.texts.push(textAnnotation);
-    console.log('[Editor] Text added:', text);
     saveToHistory();
     redrawCanvas();
   }
@@ -104,6 +101,4 @@ export function cancelTextInput() {
   input.value = '';
   setIsEditingText(false);
   setPendingText(null);
-
-  console.log('[Editor] Text input cancelled');
 }

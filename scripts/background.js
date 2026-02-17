@@ -92,18 +92,13 @@ function createErrorResponse(errorType, originalError = null) {
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  console.log('[Background] Message received:', message.action, message.mode || '');
-
   // Unified capture action with mode
   if (message.action === 'capture') {
     if (message.mode === 'visible') {
-      console.log('[Background] Mode: visible');
       captureVisible(sendResponse);
     } else if (message.mode === 'fullPage') {
-      console.log('[Background] Mode: fullPage');
       captureFullPage(message.tabId, sendResponse);
     } else if (message.mode === 'areaSelect') {
-      console.log('[Background] Mode: areaSelect');
       captureAreaSelect(message.tabId, sendResponse);
     } else {
       sendResponse(createErrorResponse(CaptureError.UNKNOWN, { message: 'Unknown capture mode: ' + message.mode }));
@@ -119,63 +114,47 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   // Full page capture complete - open in editor
   if (message.action === 'fullPageComplete') {
-    console.log('[Background] Full page capture complete');
     if (message.dataUrl) {
-      openEditor(message.dataUrl).then(result => {
-        if (!result.success) {
-          // Can't send response here as popup may be closed
-          console.error('[Background] Failed to open editor:', result.error);
-        }
-      });
+      openEditor(message.dataUrl);
     }
     return false;
   }
 
   // Full page capture error
   if (message.action === 'fullPageError') {
-    console.error('[Background] Full page capture error:', message.error);
     return false;
   }
 
   // Area select complete - crop and open editor
   if (message.action === 'areaSelectComplete') {
-    console.log('[Background] Area select complete, rect:', message.rect);
     cropAndOpenEditor(sender.tab.windowId, message.rect, message.devicePixelRatio);
     return false;
   }
 
   // Area select cancelled
   if (message.action === 'areaSelectCancelled') {
-    console.log('[Background] Area select cancelled');
     return false;
   }
 });
 
 async function captureVisible(sendResponse) {
-  console.log('[Background] Capturing visible area');
-
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
     if (!tab) {
-      console.error('[Background] No active tab found');
       sendResponse(createErrorResponse(CaptureError.NO_TAB));
       return;
     }
 
     // Check for protected URLs before attempting capture
     if (isProtectedUrl(tab.url)) {
-      console.error('[Background] Protected URL:', tab.url);
       sendResponse(createErrorResponse(CaptureError.PROTECTED_PAGE));
       return;
     }
 
-    console.log('[Background] Capturing tab:', tab.id, 'URL:', tab.url?.substring(0, 50));
-
     chrome.tabs.captureVisibleTab(tab.windowId, { format: 'png' }, async (dataUrl) => {
       if (chrome.runtime.lastError) {
         const errorMessage = chrome.runtime.lastError.message;
-        console.error('[Background] Capture failed:', errorMessage);
 
         const errorType = classifyError({ message: errorMessage });
         sendResponse(createErrorResponse(errorType, { message: errorMessage }));
@@ -183,17 +162,8 @@ async function captureVisible(sendResponse) {
       }
 
       if (!dataUrl) {
-        console.error('[Background] No data URL returned');
         sendResponse(createErrorResponse(CaptureError.CAPTURE_FAILED, { message: 'Screenshot capture returned empty' }));
         return;
-      }
-
-      console.log('[Background] Screenshot captured, length:', dataUrl.length);
-
-      // Check image size
-      const sizeInMB = dataUrl.length / (1024 * 1024);
-      if (sizeInMB > 10) {
-        console.warn('[Background] Very large screenshot:', sizeInMB.toFixed(2), 'MB');
       }
 
       // Open in editor
@@ -205,21 +175,17 @@ async function captureVisible(sendResponse) {
       }
     });
   } catch (error) {
-    console.error('[Background] Unexpected error:', error);
     const errorType = classifyError(error);
     sendResponse(createErrorResponse(errorType, error));
   }
 }
 
 async function captureFullPage(tabId, sendResponse) {
-  console.log('[Background] Starting full-page capture for tab:', tabId);
-
   try {
     // Get tab info to check URL
     const tab = await chrome.tabs.get(tabId);
 
     if (isProtectedUrl(tab.url)) {
-      console.error('[Background] Protected URL:', tab.url);
       sendResponse(createErrorResponse(CaptureError.PROTECTED_PAGE));
       return;
     }
@@ -229,24 +195,18 @@ async function captureFullPage(tabId, sendResponse) {
       files: ['scripts/full-page.js']
     });
 
-    console.log('[Background] Full-page script injected successfully');
     sendResponse({ success: true });
   } catch (error) {
-    console.error('[Background] Failed to inject script:', error);
-
     const errorType = classifyError(error, { action: 'inject', isProtectedUrl: true });
     sendResponse(createErrorResponse(errorType, error));
   }
 }
 
 function captureSegment(windowId, sendResponse) {
-  console.log('[Background] Capturing segment for window:', windowId);
-
   try {
     chrome.tabs.captureVisibleTab(windowId, { format: 'png' }, (dataUrl) => {
       if (chrome.runtime.lastError) {
         const errorMessage = chrome.runtime.lastError.message;
-        console.error('[Background] Segment capture failed:', errorMessage);
 
         const errorType = classifyError({ message: errorMessage });
         sendResponse(createErrorResponse(errorType, { message: errorMessage }));
@@ -258,24 +218,19 @@ function captureSegment(windowId, sendResponse) {
         return;
       }
 
-      console.log('[Background] Segment captured, length:', dataUrl.length);
       sendResponse({ dataUrl: dataUrl });
     });
   } catch (error) {
-    console.error('[Background] Segment capture error:', error);
     const errorType = classifyError(error);
     sendResponse(createErrorResponse(errorType, error));
   }
 }
 
 async function captureAreaSelect(tabId, sendResponse) {
-  console.log('[Background] Starting area select capture for tab:', tabId);
-
   try {
     const tab = await chrome.tabs.get(tabId);
 
     if (isProtectedUrl(tab.url)) {
-      console.error('[Background] Protected URL:', tab.url);
       sendResponse(createErrorResponse(CaptureError.PROTECTED_PAGE));
       return;
     }
@@ -285,18 +240,14 @@ async function captureAreaSelect(tabId, sendResponse) {
       files: ['scripts/area-select.js']
     });
 
-    console.log('[Background] Area select script injected successfully');
     sendResponse({ success: true });
   } catch (error) {
-    console.error('[Background] Failed to inject area select script:', error);
     const errorType = classifyError(error, { action: 'inject', isProtectedUrl: true });
     sendResponse(createErrorResponse(errorType, error));
   }
 }
 
 async function cropAndOpenEditor(windowId, rect, dpr) {
-  console.log('[Background] Cropping screenshot, DPR:', dpr, 'rect:', rect);
-
   try {
     const dataUrl = await new Promise((resolve, reject) => {
       chrome.tabs.captureVisibleTab(windowId, { format: 'png' }, (result) => {
@@ -312,14 +263,10 @@ async function cropAndOpenEditor(windowId, rect, dpr) {
       });
     });
 
-    console.log('[Background] Screenshot captured for cropping, length:', dataUrl.length);
-
     // Convert dataUrl to ImageBitmap via fetch + blob
     const response = await fetch(dataUrl);
     const blob = await response.blob();
     const imageBitmap = await createImageBitmap(blob);
-
-    console.log('[Background] Image dimensions:', imageBitmap.width, 'x', imageBitmap.height);
 
     // Calculate crop coordinates (CSS pixels → device pixels)
     const cropX = Math.round(rect.x * dpr);
@@ -332,8 +279,6 @@ async function cropAndOpenEditor(windowId, rect, dpr) {
     const clampedY = Math.max(0, Math.min(cropY, imageBitmap.height - 1));
     const clampedW = Math.min(cropW, imageBitmap.width - clampedX);
     const clampedH = Math.min(cropH, imageBitmap.height - clampedY);
-
-    console.log('[Background] Crop rect (device px):', clampedX, clampedY, clampedW, clampedH);
 
     // Use OffscreenCanvas to crop
     const canvas = new OffscreenCanvas(clampedW, clampedH);
@@ -351,38 +296,26 @@ async function cropAndOpenEditor(windowId, rect, dpr) {
     }
     const croppedDataUrl = 'data:image/png;base64,' + btoa(binaryString);
 
-    console.log('[Background] Cropped image length:', croppedDataUrl.length);
-
     // Open in editor
-    const result = await openEditor(croppedDataUrl);
-    if (!result.success) {
-      console.error('[Background] Failed to open editor after crop:', result.error);
-    }
-  } catch (error) {
-    console.error('[Background] Crop and open editor failed:', error);
+    await openEditor(croppedDataUrl);
+  } catch {
+    // Crop and open editor failed
   }
 }
 
 async function openEditor(dataUrl) {
-  console.log('[Background] Opening editor...');
-
   try {
     // Store screenshot data
     await chrome.storage.local.set({ screenshotData: dataUrl });
-    console.log('[Background] Screenshot saved to storage');
 
     // Open editor page
     const editorUrl = chrome.runtime.getURL('editor/editor.html');
-    const tab = await chrome.tabs.create({ url: editorUrl });
-    console.log('[Background] Editor opened in tab:', tab.id);
+    await chrome.tabs.create({ url: editorUrl });
 
     return { success: true };
   } catch (error) {
-    console.error('[Background] Failed to open editor:', error);
-
     // Check if it's a storage quota error
     if (error.message && (error.message.includes('QUOTA') || error.message.includes('quota'))) {
-      console.error('[Background] Storage quota exceeded');
       // Try to open editor anyway - it might be able to recover
       try {
         const editorUrl = chrome.runtime.getURL('editor/editor.html');

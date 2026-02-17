@@ -12,8 +12,6 @@ import { loadDraft, clearDraft, restoreAnnotations, startAutoSave, setDraftImage
 document.addEventListener('DOMContentLoaded', init);
 
 async function init() {
-  console.log('[Editor] Initializing...');
-
   setCanvas(document.getElementById('canvas'));
   setCtx(state.canvas.getContext('2d'));
 
@@ -39,7 +37,6 @@ async function init() {
       startAutoSave(draft.imageDataUrl);
       setDraftImageUrl(draft.imageDataUrl);
       hideLoading();
-      console.log('[Editor] Draft restored automatically (no new image)');
     } else if (hasNewImage) {
       // Only new image - load it normally
       await loadImage();
@@ -68,7 +65,6 @@ async function init() {
       throw new Error('No image data found');
     }
   } catch (error) {
-    console.error('[Editor] Failed to load image:', error);
     showError('Failed to load image: ' + error.message);
     hideLoading();
   }
@@ -123,9 +119,7 @@ function showDraftModal(draft, hasNewImage = false) {
       setDraftImageUrl(draft.imageDataUrl);
       // Clear the new screenshot data since we're using draft
       await chrome.storage.local.remove(['screenshotData']);
-      console.log('[Editor] Draft restored successfully');
     } catch (error) {
-      console.error('[Editor] Failed to restore draft:', error);
       showError('Failed to restore draft: ' + error.message);
     }
   };
@@ -141,9 +135,7 @@ function showDraftModal(draft, hasNewImage = false) {
         await loadImage();
         saveToHistory();
         startAutoSave(state.image.src);
-        console.log('[Editor] Started fresh with new image');
       } catch (error) {
-        console.error('[Editor] Failed to load new image:', error);
         showError('Failed to load image: ' + error.message);
       }
     } else {
@@ -153,22 +145,17 @@ function showDraftModal(draft, hasNewImage = false) {
 }
 
 async function loadImage() {
-  console.log('[Editor] Loading image...');
-
   const urlParams = new URLSearchParams(window.location.search);
   const imageUrl = urlParams.get('image');
 
   if (imageUrl) {
-    console.log('[Editor] Loading from URL parameter');
     await loadImageFromUrl(decodeURIComponent(imageUrl));
     return;
   }
 
-  console.log('[Editor] Checking chrome.storage...');
   const result = await chrome.storage.local.get(['screenshotData']);
 
   if (result.screenshotData) {
-    console.log('[Editor] Loading from storage');
     await loadImageFromUrl(result.screenshotData);
     await chrome.storage.local.remove(['screenshotData']);
     return;
@@ -182,8 +169,6 @@ function loadImageFromUrl(url) {
     const img = new Image();
 
     img.onload = () => {
-      console.log('[Editor] Image loaded:', img.width, 'x', img.height);
-
       setImage(img);
       state.canvas.width = img.width;
       state.canvas.height = img.height;
@@ -252,8 +237,6 @@ function setupKeyboardShortcuts() {
  */
 function setupStorageErrorHandler() {
   setStorageErrorCallback((error) => {
-    console.warn('[Editor] Storage error:', error);
-
     showStorageErrorModal({
       message: error.message || 'Storage is full. Please download your image and clear the draft.',
       onDownload: () => {

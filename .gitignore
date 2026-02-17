@@ -1,0 +1,17 @@
+# Debug logs
+firebase-debug.log
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Node (if ever added)
+node_modules/
+
+# Build artifacts
+*.zip

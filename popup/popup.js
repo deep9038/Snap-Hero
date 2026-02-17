@@ -79,7 +79,6 @@ async function captureWithRetry(mode, maxRetries = 2) {
       // No response - assume success
       return { success: true };
     } catch (e) {
-      console.log(`[Popup] Attempt ${i + 1} failed:`, e.message);
       if (i < maxRetries) {
         await delay(500);
       } else {
@@ -93,7 +92,6 @@ async function captureWithRetry(mode, maxRetries = 2) {
 
 // Capture Visible button handler
 captureVisibleBtn.addEventListener('click', async () => {
-  console.log('[Popup] Capture Visible clicked');
   clearMessages();
   setButtonLoading(captureVisibleBtn, true);
 
@@ -101,16 +99,13 @@ captureVisibleBtn.addEventListener('click', async () => {
     const response = await captureWithRetry('visible');
 
     if (response.success) {
-      console.log('[Popup] Visible capture successful');
       window.close();
     } else if (response.error) {
       // Handle error response from background
-      console.error('[Popup] Capture error:', response.errorType, response.error);
       showError(getUserMessage(response), response.errorType);
       setButtonLoading(captureVisibleBtn, false);
     }
   } catch (error) {
-    console.error('[Popup] Failed:', error);
     showError(getUserMessage(error), error.errorType);
     setButtonLoading(captureVisibleBtn, false);
   }
@@ -118,7 +113,6 @@ captureVisibleBtn.addEventListener('click', async () => {
 
 // Capture Full Page button handler
 captureFullPageBtn.addEventListener('click', async () => {
-  console.log('[Popup] Capture Full Page clicked');
   clearMessages();
   setButtonLoading(captureFullPageBtn, true);
   showStatus('Capturing full page...');
@@ -132,8 +126,6 @@ captureFullPageBtn.addEventListener('click', async () => {
       return;
     }
 
-    console.log('[Popup] Active tab:', tab.id, tab.url);
-
     // Check for protected pages
     if (tab.url.startsWith('chrome://') || tab.url.startsWith('chrome-extension://') || tab.url.startsWith('about:')) {
       showError(getUserMessage({ message: tab.url }));
@@ -141,15 +133,11 @@ captureFullPageBtn.addEventListener('click', async () => {
       return;
     }
 
-    console.log('[Popup] Starting full-page capture for tab:', tab.id);
-
     const response = await chrome.runtime.sendMessage({
       action: 'capture',
       mode: 'fullPage',
       tabId: tab.id
     });
-
-    console.log('[Popup] Response:', response);
 
     if (!response) {
       showStatus('Capture started...');
@@ -158,16 +146,13 @@ captureFullPageBtn.addEventListener('click', async () => {
     }
 
     if (response.error) {
-      console.error('[Popup] Full page error:', response.errorType, response.error);
       showError(getUserMessage(response), response.errorType);
       setButtonLoading(captureFullPageBtn, false);
     } else if (response.success) {
-      console.log('[Popup] Full page capture initiated');
       showStatus('Scrolling and capturing...');
       setTimeout(() => window.close(), 1500);
     }
   } catch (error) {
-    console.error('[Popup] Failed:', error);
     showError(getUserMessage(error), error.errorType);
     setButtonLoading(captureFullPageBtn, false);
   }
@@ -175,7 +160,6 @@ captureFullPageBtn.addEventListener('click', async () => {
 
 // Capture Area Select button handler
 captureAreaBtn.addEventListener('click', async () => {
-  console.log('[Popup] Capture Area Select clicked');
   clearMessages();
   setButtonLoading(captureAreaBtn, true);
 
@@ -188,8 +172,6 @@ captureAreaBtn.addEventListener('click', async () => {
       return;
     }
 
-    console.log('[Popup] Active tab:', tab.id, tab.url);
-
     // Check for protected pages
     if (tab.url.startsWith('chrome://') || tab.url.startsWith('chrome-extension://') || tab.url.startsWith('about:')) {
       showError(getUserMessage({ message: tab.url }));
@@ -197,15 +179,11 @@ captureAreaBtn.addEventListener('click', async () => {
       return;
     }
 
-    console.log('[Popup] Starting area select capture for tab:', tab.id);
-
     const response = await chrome.runtime.sendMessage({
       action: 'capture',
       mode: 'areaSelect',
       tabId: tab.id
     });
-
-    console.log('[Popup] Response:', response);
 
     if (!response) {
       setTimeout(() => window.close(), 500);
@@ -213,15 +191,12 @@ captureAreaBtn.addEventListener('click', async () => {
     }
 
     if (response.error) {
-      console.error('[Popup] Area select error:', response.errorType, response.error);
       showError(getUserMessage(response), response.errorType);
       setButtonLoading(captureAreaBtn, false);
     } else if (response.success) {
-      console.log('[Popup] Area select script injected');
       window.close();
     }
   } catch (error) {
-    console.error('[Popup] Failed:', error);
     showError(getUserMessage(error), error.errorType);
     setButtonLoading(captureAreaBtn, false);
   }
@@ -264,11 +239,6 @@ function showError(message, errorType = null) {
     errorDiv.textContent = message;
   }
   errorDiv.classList.add('visible');
-
-  // Log error type for debugging
-  if (errorType) {
-    console.log('[Popup] Error type:', errorType);
-  }
 }
 
 function showStatus(message) {

@@ -1,6 +1,4 @@
 (async function fullPageCapture() {
-  console.log('[FullPage] Starting full-page capture');
-
   // Constants
   const CAPTURE_DELAY = 150;
   const LAZY_LOAD_DELAY = 300;
@@ -35,20 +33,15 @@
   const viewportHeight = window.innerHeight;
   const viewportWidth = window.innerWidth;
 
-  console.log('[FullPage] Page dimensions:', { scrollHeight, viewportHeight, viewportWidth });
-
   // Check if page exceeds max canvas size
   const effectiveHeight = Math.min(scrollHeight, MAX_CANVAS_HEIGHT);
   if (scrollHeight > effectiveHeight) {
-    console.warn('[FullPage] Page exceeds max height, will be truncated to', effectiveHeight);
     updateProgress('Warning: Page is very long, some content may be truncated', 0, 0);
     await delay(1500);
   }
 
   // Detect fixed/sticky elements
   const fixedElements = detectFixedElements();
-  console.log('[FullPage] Found fixed elements:', fixedElements.length);
-
   // Store original scroll position
   const originalScrollY = window.scrollY;
 
@@ -66,7 +59,6 @@
   const totalCaptures = Math.ceil(effectiveHeight / viewportHeight);
   const captures = [];
 
-  console.log('[FullPage] Total captures needed:', totalCaptures);
   updateProgress(`Preparing to capture ${totalCaptures} segments...`, 0, totalCaptures);
 
   try {
@@ -91,8 +83,6 @@
           el.style.visibility = 'hidden';
         });
       }
-
-      console.log(`[FullPage] Capturing segment ${i + 1}/${totalCaptures} at scrollY=${scrollY}`);
 
       // Request capture from background script
       const dataUrl = await requestCapture();
@@ -126,7 +116,6 @@
     restoreState();
 
     updateProgress('Stitching images together...', totalCaptures, totalCaptures);
-    console.log('[FullPage] All segments captured, stitching...');
 
     // Stitch images together and get blob
     const blob = await stitchImages(captures, viewportWidth, effectiveHeight);
@@ -135,13 +124,10 @@
       throw new Error('Failed to create final image');
     }
 
-    console.log('[FullPage] Stitching complete, blob size:', blob.size);
-
     updateProgress('Finalizing...', totalCaptures, totalCaptures);
 
     // Convert blob to data URL for editor
     const dataUrl = await blobToDataUrl(blob);
-    console.log('[FullPage] Converted to data URL, length:', dataUrl.length);
 
     removeProgressOverlay();
 
@@ -152,7 +138,6 @@
     });
 
   } catch (error) {
-    console.error('[FullPage] Capture failed:', error);
     restoreState();
     removeProgressOverlay();
 
@@ -239,12 +224,12 @@
           reject(new Error('Invalid capture response'));
         }
       });
+  
+  
     });
   }
 
   async function stitchImages(captures, width, totalHeight) {
-    console.log('[FullPage] Creating canvas:', { width, height: totalHeight });
-
     const canvas = document.createElement('canvas');
     canvas.width = width;
     canvas.height = totalHeight;
@@ -258,14 +243,11 @@
     for (let i = 0; i < captures.length; i++) {
       const capture = captures[i];
 
-      console.log(`[FullPage] Loading image ${i + 1}/${captures.length}...`);
       const img = await loadImage(capture.dataUrl);
 
       const scale = img.width / width;
       const sourceY = capture.isPartial ? img.height - (capture.captureHeight * scale) : 0;
       const sourceHeight = capture.captureHeight * scale;
-
-      console.log(`[FullPage] Drawing segment ${i + 1}`);
 
       ctx.drawImage(
         img,
@@ -275,8 +257,6 @@
         width, capture.captureHeight
       );
     }
-
-    console.log('[FullPage] Converting canvas to blob...');
 
     // Convert canvas to blob (more reliable than toDataURL for large images)
     return new Promise((resolve, reject) => {

@@ -1,8 +1,11 @@
 {
   "manifest_version": 3,
-  "name": "Snap Hero",
-  "version": "1.2.0",
-  "description": "Capture and edit screenshots with one click",
+  "name": "Snap Hero - Screenshot Capture & Editor Tool",
+  "short_name": "Snap Hero",
+  "version": "1.3.0",
+  "description": "Capture full-page or area screenshots, annotate with pen, arrows, text, blur & shapes, then download or copy to clipboard instantly",
+  "author": "Snap Hero",
+  "homepage_url": "https://github.com/deep9038/Snap-Hero",
   "icons": {
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",

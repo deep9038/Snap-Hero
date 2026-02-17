@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Snap Hero - Privacy Policy</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.7;
+      color: #333;
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 40px 20px;
+      background: #fafafa;
+    }
+    h1 { font-size: 28px; margin-bottom: 8px; color: #111; }
+    h2 { font-size: 20px; margin-top: 32px; margin-bottom: 12px; color: #222; }
+    p { margin-bottom: 16px; }
+    ul { margin-left: 24px; margin-bottom: 16px; }
+    li { margin-bottom: 8px; }
+    .date { color: #666; font-size: 14px; margin-bottom: 32px; }
+    a { color: #4f46e5; }
+  </style>
+</head>
+<body>
+  <h1>Snap Hero - Privacy Policy</h1>
+  <p class="date">Last updated: February 16, 2026</p>
+
+  <h2>Overview</h2>
+  <p>Snap Hero is a browser extension for capturing and editing screenshots. We are committed to protecting your privacy. This policy explains what data the extension handles and how.</p>
+
+  <h2>Data Collection</h2>
+  <p><strong>Snap Hero does not collect, transmit, or share any personal data.</strong></p>
+  <p>The extension does not use analytics, telemetry, tracking pixels, cookies, or any form of user monitoring. No data is ever sent to our servers or any third-party service.</p>
+
+  <h2>Data Storage</h2>
+  <p>Snap Hero stores the following data <strong>locally on your device only</strong>, using Chrome's built-in <code>chrome.storage.local</code> API:</p>
+  <ul>
+    <li><strong>Screenshots:</strong> Temporarily stored to transfer the captured image to the editor. Removed after the editor loads.</li>
+    <li><strong>Drafts:</strong> Your current editing session (image + annotations) is auto-saved locally so you can resume if the tab closes accidentally. You can clear this at any time.</li>
+  </ul>
+  <p>All stored data remains on your device and is never transmitted externally. Chrome automatically removes this data when the extension is uninstalled.</p>
+
+  <h2>Permissions</h2>
+  <p>Snap Hero requests only the minimum permissions needed to function:</p>
+  <ul>
+    <li><strong>activeTab:</strong> To capture a screenshot of the current tab when you click the extension.</li>
+    <li><strong>scripting:</strong> To inject the full-page capture and area-select scripts into the current page.</li>
+    <li><strong>storage:</strong> To temporarily store screenshots and auto-save drafts locally.</li>
+    <li><strong>tabs:</strong> To identify the current active tab for capture.</li>
+    <li><strong>clipboardWrite:</strong> To copy screenshots to your clipboard when you use the "Copy" feature.</li>
+  </ul>
+
+  <h2>Share Feature</h2>
+  <p>If you use the optional "Share Link" feature, your screenshot image is uploaded to a third-party image hosting service to generate a shareable URL. This is the only scenario where any data leaves your device, and it only happens when you explicitly choose to share. The image hosting service's own privacy policy applies to the uploaded image.</p>
+
+  <h2>Third-Party Services</h2>
+  <p>Snap Hero does not integrate with any third-party services for analytics, advertising, or data processing. The optional share feature is the only external interaction, and it is always user-initiated.</p>
+
+  <h2>Children's Privacy</h2>
+  <p>Snap Hero does not knowingly collect any information from children under 13.</p>
+
+  <h2>Changes to This Policy</h2>
+  <p>We may update this privacy policy from time to time. Any changes will be reflected on this page with an updated date.</p>
+
+  <h2>Contact</h2>
+  <p>If you have questions about this privacy policy, please open an issue on our <a href="https://github.com/deep9038/Snap-Hero">GitHub repository</a>.</p>
+</body>
+</html>

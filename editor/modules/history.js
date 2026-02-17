@@ -58,11 +58,6 @@ export function saveToHistory() {
     state.historyIndex--;
   }
 
-  console.log('[Editor] Saved to history, index:', state.historyIndex,
-    'strokes:', state.strokes.length, 'arrows:', state.arrows.length,
-    'rectangles:', state.rectangles.length, 'ellipses:', state.ellipses.length,
-    'blurs:', state.blurs.length, 'texts:', state.texts.length);
-
   // Schedule debounced draft save
   if (state.image) {
     scheduleDraftSave(state.image.src);
@@ -74,9 +69,6 @@ export function undo() {
   if (state.historyIndex > 0) {
     state.historyIndex--;
     restoreFromHistory();
-    console.log('[Editor] Undo, index:', state.historyIndex);
-  } else {
-    console.log('[Editor] Nothing to undo');
   }
 }
 
@@ -85,9 +77,6 @@ export function redo() {
   if (state.historyIndex < state.history.length - 1) {
     state.historyIndex++;
     restoreFromHistory();
-    console.log('[Editor] Redo, index:', state.historyIndex);
-  } else {
-    console.log('[Editor] Nothing to redo');
   }
 }
 

@@ -252,21 +252,15 @@ export function handleMouseDown(e) {
     const stroke = new Stroke(state.color, state.lineWidth);
     stroke.addPoint(coords.x, coords.y);
     setCurrentStroke(stroke);
-    console.log('[Editor] Start pen stroke at:', coords.x.toFixed(0), coords.y.toFixed(0));
   } else if (state.currentTool === 'arrow') {
     setCurrentArrow(new Arrow(coords.x, coords.y, state.color, state.lineWidth));
-    console.log('[Editor] Start arrow at:', coords.x.toFixed(0), coords.y.toFixed(0));
   } else if (state.currentTool === 'rectangle') {
     setCurrentRectangle(new Rectangle(coords.x, coords.y, state.color, state.lineWidth, state.filled));
-    console.log('[Editor] Start rectangle at:', coords.x.toFixed(0), coords.y.toFixed(0));
   } else if (state.currentTool === 'circle') {
     setCurrentEllipse(new Ellipse(coords.x, coords.y, state.color, state.lineWidth, state.filled));
-    console.log('[Editor] Start ellipse at:', coords.x.toFixed(0), coords.y.toFixed(0));
   } else if (state.currentTool === 'blur') {
     setCurrentBlur(new BlurRegion(coords.x, coords.y));
-    console.log('[Editor] Start blur at:', coords.x.toFixed(0), coords.y.toFixed(0));
   } else {
-    console.log('[Editor] Tool not implemented yet:', state.currentTool);
     setIsDrawing(false);
   }
 }
@@ -317,7 +311,6 @@ export function handleMouseUp() {
   if (state.currentTool === 'pen' && state.currentStroke) {
     if (state.currentStroke.points.length > 0) {
       state.strokes.push(state.currentStroke);
-      console.log('[Editor] Stroke completed with', state.currentStroke.points.length, 'points');
       saveToHistory();
     }
     setCurrentStroke(null);
@@ -328,7 +321,6 @@ export function handleMouseUp() {
 
     if (length > CANVAS.minArrowLength) {
       state.arrows.push(state.currentArrow);
-      console.log('[Editor] Arrow completed, length:', length.toFixed(0));
       saveToHistory();
     }
     setCurrentArrow(null);
@@ -337,7 +329,6 @@ export function handleMouseUp() {
 
     if (size > CANVAS.minShapeSize) {
       state.rectangles.push(state.currentRectangle);
-      console.log('[Editor] Rectangle completed, size:', state.currentRectangle.width.toFixed(0), 'x', state.currentRectangle.height.toFixed(0));
       saveToHistory();
     }
     setCurrentRectangle(null);
@@ -346,7 +337,6 @@ export function handleMouseUp() {
 
     if (size > CANVAS.minArrowLength) {
       state.ellipses.push(state.currentEllipse);
-      console.log('[Editor] Ellipse completed, radii:', state.currentEllipse.radiusX.toFixed(0), 'x', state.currentEllipse.radiusY.toFixed(0));
       saveToHistory();
     }
     setCurrentEllipse(null);
@@ -355,7 +345,6 @@ export function handleMouseUp() {
 
     if (size > CANVAS.minShapeSize) {
       state.blurs.push(state.currentBlur);
-      console.log('[Editor] Blur completed, size:', Math.abs(state.currentBlur.width).toFixed(0), 'x', Math.abs(state.currentBlur.height).toFixed(0));
       saveToHistory();
     }
     setCurrentBlur(null);
@@ -378,7 +367,6 @@ function handleSelectMouseDown(coords) {
         setDragStartY(coords.y);
         setOriginalBounds({...bounds});
         saveToHistory();  // Save before resize
-        console.log('[Editor] Start resize:', handle);
         return;
       }
     }
@@ -398,12 +386,10 @@ function handleSelectMouseDown(coords) {
     saveToHistory();  // Save before move
     redrawCanvas();
     if (bounds) drawSelectionHandles(bounds);
-    console.log('[Editor] Selected:', hit.type, 'at index', hit.index);
   } else {
     // Clicked empty space - deselect
     clearSelection();
     redrawCanvas();
-    console.log('[Editor] Selection cleared');
   }
 }
 

@@ -165,7 +165,6 @@ function isQuotaExceededError(error) {
  */
 export async function saveDraft(imageDataUrl) {
   if (!imageDataUrl) {
-    console.log('[Draft] No image data URL provided, skipping save');
     return { success: false, error: 'No image data' };
   }
 
@@ -173,7 +172,6 @@ export async function saveDraft(imageDataUrl) {
   const sizeCheck = checkImageSize(imageDataUrl);
   if (!sizeCheck.ok) {
     lastSaveError = { type: 'size', message: sizeCheck.message };
-    console.warn('[Draft] Image too large for storage:', sizeCheck.message);
     return { success: false, error: sizeCheck.message, quotaExceeded: true };
   }
 
@@ -186,19 +184,8 @@ export async function saveDraft(imageDataUrl) {
   try {
     await chrome.storage.local.set({ [STORAGE_KEY]: draft });
     lastSaveError = null;
-    console.log('[Draft] Saved draft to storage', {
-      size: formatBytes(estimateDataUrlSize(imageDataUrl)),
-      strokes: draft.annotations.strokes.length,
-      arrows: draft.annotations.arrows.length,
-      rectangles: draft.annotations.rectangles.length,
-      ellipses: draft.annotations.ellipses.length,
-      blurs: draft.annotations.blurs.length,
-      texts: draft.annotations.texts.length
-    });
     return { success: true };
   } catch (error) {
-    console.error('[Draft] Failed to save draft:', error);
-
     const quotaExceeded = isQuotaExceededError(error);
     lastSaveError = {
       type: quotaExceeded ? 'quota' : 'unknown',
@@ -252,17 +239,11 @@ export function startAutoSave(imageDataUrl) {
 
   // Check initial size and warn if large
   const sizeCheck = checkImageSize(imageDataUrl);
-  if (sizeCheck.warning && sizeCheck.ok) {
-    console.warn('[Draft] ' + sizeCheck.message);
-  }
-
   autoSaveIntervalId = setInterval(async () => {
     if (currentImageDataUrl) {
       await saveDraft(currentImageDataUrl);
     }
   }, AUTO_SAVE_INTERVAL);
-
-  console.log('[Draft] Started auto-save interval (30s)');
 }
 
 /**
@@ -278,8 +259,6 @@ export function stopAutoSave() {
     clearTimeout(debounceTimer);
     debounceTimer = null;
   }
-
-  console.log('[Draft] Stopped auto-save');
 }
 
 /**
@@ -292,13 +271,11 @@ export async function loadDraft() {
     const draft = result[STORAGE_KEY];
 
     if (draft && draft.imageDataUrl && draft.annotations) {
-      console.log('[Draft] Found draft from', new Date(draft.lastModified).toLocaleString());
       return draft;
     }
 
     return null;
   } catch (error) {
-    console.error('[Draft] Failed to load draft:', error);
     return null;
   }
 }
@@ -313,10 +290,8 @@ export async function clearDraft() {
 
   try {
     await chrome.storage.local.remove([STORAGE_KEY]);
-    console.log('[Draft] Cleared draft from storage');
     return { success: true };
   } catch (error) {
-    console.error('[Draft] Failed to clear draft:', error);
     return { success: false, error: error.message };
   }
 }
@@ -340,7 +315,6 @@ export async function getStorageInfo() {
       }
     };
   } catch (error) {
-    console.error('[Draft] Failed to get storage info:', error);
     return { used: 0, total: 10 * 1024 * 1024, percentage: 0 };
   }
 }
@@ -394,15 +368,6 @@ export function restoreAnnotations(annotations) {
   // Restore texts
   state.texts = (annotations.texts || []).map(data => {
     return new TextAnnotation(data.x, data.y, data.text, data.fontSize, data.color);
-  });
-
-  console.log('[Draft] Restored annotations:', {
-    strokes: state.strokes.length,
-    arrows: state.arrows.length,
-    rectangles: state.rectangles.length,
-    ellipses: state.ellipses.length,
-    blurs: state.blurs.length,
-    texts: state.texts.length
   });
 
   // Redraw canvas with restored annotations

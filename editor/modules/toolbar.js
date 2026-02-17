@@ -9,7 +9,6 @@ export function setupToolbar() {
   document.querySelectorAll('.tool-btn[data-tool]').forEach(btn => {
     btn.addEventListener('click', () => {
       const tool = btn.dataset.tool;
-      console.log('[Editor] Tool selected:', tool);
 
       if (tool === 'undo') {
         undo();
@@ -265,22 +264,18 @@ export function updateToolbarForTool(tool) {
 // Internal handlers with logging
 function handleSetColor(color) {
   setColor(color);
-  console.log('[Editor] Color changed:', color);
 }
 
 function handleSetLineWidth(width) {
   setLineWidth(width);
-  console.log('[Editor] Line width changed:', width);
 }
 
 function handleSetFontSize(size) {
   setFontSize(size);
-  console.log('[Editor] Font size changed:', size);
 }
 
 function handleSetFilled(filled) {
   setFilled(filled);
-  console.log('[Editor] Filled changed:', filled);
 }
 
 // Select a tool programmatically
